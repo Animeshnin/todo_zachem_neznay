@@ -1,13 +1,9 @@
 
 import './App.scss'
-import { useCallback, useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 
 
-enum Condition {
-    ALL = 'all',
-    READY = 'ready',
-    NOT_READY = 'no ready',
-}
+type Filter = "все" | "не готовые" | "готовые";
 
 const filterToDo = {
     all: "все",
@@ -30,7 +26,7 @@ function App() {
 
     const [toDoList, setToDoList] = useState<toDoType[]>([])
     const [inputValue, setInput] = useState<string>("")
-    const [filter, setFilter] = useState<Condition>(Condition.ALL)
+    const [filter, setFilter] = useState<Filter>('все')
 
 
 
@@ -63,6 +59,16 @@ function App() {
         )
     }, [])
 
+    const toggleFilter = useMemo(() => toDoList.filter((todoItem) => {
+        if(filter === 'готовые'){
+            return todoItem.condition
+        }
+        else if(filter === 'не готовые'){
+            return !todoItem.condition
+        }
+        else return true
+    }), [filter, toDoList])
+
     return (
         <main className={"app-container"}>
             <header className={"app-header"}>
@@ -77,26 +83,33 @@ function App() {
                     {Object.entries(filterToDo)
                         .map(([_, value]) => (
 
-                            <button className={"btn"}>{value}</button>
+                            <button className={"btn"} onClick={() => setFilter(value as Filter)}>{value}</button>
 
 
                         )
                         )}
                 </div>
                     <ul className={"todo-list"}>
-                        {toDoList.map((toDoItem) => (
-                            <li className={"todo-item"}>
-                                <div className={"todo-item-left"}>
-                                    <input checked={toDoItem.condition} type={'checkbox'}
-                                           onChange={() => updateCondition(toDoItem.id)}/>
-                                    <span
-                                        className={toDoItem.condition ? "todo-item-name isCompleted" : "todo-item-name"}>{toDoItem.text}</span>
-                                </div>
-                                <button onClick={() => deleteToDoItem(toDoItem.id)} className={'btn red'}>Удалить
-                                </button>
-                            </li>
-                        ))}
+                        {toggleFilter.length > 0
+                            ?
+                            (toggleFilter.map((toDoItem) => (
+                                    <li className={"todo-item"}>
+                                        <div className={"todo-item-left"}>
+                                            <input checked={toDoItem.condition} type={'checkbox'}
+                                                   onChange={() => updateCondition(toDoItem.id)}/>
+                                            <span
+                                                className={toDoItem.condition ? "todo-item-name isCompleted" : "todo-item-name"}>{toDoItem.text}</span>
+                                        </div>
+                                        <button onClick={() => deleteToDoItem(toDoItem.id)} className={'btn red'}>Удалить
+                                        </button>
+                                    </li>
+                                )))
+                            :
+                            (
+                                "NO DATA"
+                            )
 
+                        }
                     </ul>
             </header>
         </main>
